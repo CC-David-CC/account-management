@@ -1,0 +1,14 @@
+:host {display:block; height:100%; overflow:auto; background:#f6f8fa; color:#1b2530; font:15px/1.45 system-ui,sans-serif}
+* {box-sizing:border-box}
+nav {display:flex; gap:.5rem; padding:.75rem 1rem; background:#e5ebf0; border-bottom:1px solid #bdc8d1}
+main,[role=status] {max-width:48rem; margin:auto; padding:.75rem 1rem}
+[role=status]:empty {padding:0}
+section {background:white; border:1px solid #ccd5dc; border-radius:.4rem; padding:1rem; margin:.7rem 0}
+section:empty {display:none}
+h2,h3 {margin:0 0 .65rem; font-size:1.2rem} h2 {font-size:1.5rem}
+label {display:block; margin:.6rem 0}
+label:not(.toggle) input {display:block; margin-top:.2rem; max-width:100%}
+input,button {font:inherit;padding:.35rem .6rem} button {cursor:pointer; margin-right:.35rem}
+.toggle {display:flex; align-items:center; gap:.5rem}
+ul {display:flex; gap:.3rem; flex-wrap:wrap; list-style:none; padding:0}
+canvas,output,a {display:block} output {font-family:monospace; overflow-wrap:anywhere; user-select:all}

@@ -1,14 +1,11 @@
 # Account Management
 
-WebOS browser app for personal settings and delegated account administration.
+Open **System Tools → Account Management** in a signed-in WebOS desktop with this component enabled. **My account** changes the Chat display name, profile image and password. Change password verifies the current password and ends existing sessions. Images are cropped to 64 × 64 pixels before storage.
 
-| View | Intended use |
-| --- | --- |
-| My account | A signed-in user changes their own password, display name, and avatar. |
-| Manage users | An authorized operator finds a registered user and performs the specific operations their role permits. These include password resets, mail permissions, and retention across scheduled resets. |
+Accounts with the user-search permission also see **Manage users**. The backend checks each action separately. A moderator with the default grants can inspect users. An administrator can change reset retention, suspend or restore sign-in, issue a single-use password reset code valid for 15 minutes, and record requested mail settings. The public pilot’s installed mail policy applies until a mail change has been reconciled. Password reset codes belong in a private channel.
 
-Both views use the signed-in WebOS session. The Accounts backend owns identity, authorization, and account operations. It must check the acting subject, target, and required permission on every privileged request. The mail service enforces delivery and sending grants. The browser displays effective permissions and the outcome of each operation.
+## Source and build
 
-## Development status
+The entry point is `app.mjs`, which exports `mount(host)`. Its stylesheet is `style.css`. There are no app dependencies or compilation steps. Run `node --check app.mjs` in this checkout. The WebOS viewer builder accepts `--account-management enabled` and publishes both files in the app’s content-addressed directory. The app uses the signed WebOS Files gateway transport to reach the Accounts backend. The account service resolves permissions from the signed-in subject for each request.
 
-The initial commit establishes repository ownership. The browser entry point, build recipe, desktop launcher, and account-management endpoints are pending. In the WebOS checkout, see `migration/ACCOUNT-MANAGEMENT-AND-MAIL-PLAN.md` for the implementation order and acceptance checks. The existing account service lives at `platform/accounts/`.
+The queue, database migration, reset behavior and rollout checks are documented in the WebOS checkout under `migration/ACCOUNT-MANAGEMENT-AND-MAIL-PLAN.md`.
