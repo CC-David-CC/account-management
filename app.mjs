@@ -62,12 +62,13 @@ export function mount(host) {
     const button = create('button', label);
     button.type = 'button';
     button.addEventListener('click', async () => {
+      if (button.getAttribute('aria-disabled') === 'true') return;
       const current = page;
-      button.disabled = true;
+      button.setAttribute('aria-disabled', 'true');
       message('');
       try { await callback(); }
       catch (error) { await reportError(error, current); }
-      finally { button.disabled = false; }
+      finally { button.removeAttribute('aria-disabled'); }
     });
     return button;
   }
@@ -98,7 +99,7 @@ export function mount(host) {
     }
     return canvas;
   }
-  async function upload(file) {
+  async function encodeAvatar(file) {
     if (!file || !['image/png','image/jpeg','image/webp'].includes(file.type) || file.size > 4 * 1024 * 1024)
       throw Error('Choose a PNG, JPEG or WebP image under 4 MiB.');
     const bitmap = await createImageBitmap(file);
@@ -108,7 +109,7 @@ export function mount(host) {
       const side = Math.min(bitmap.width, bitmap.height);
       ctx.drawImage(bitmap, (bitmap.width-side)/2, (bitmap.height-side)/2, side, side, 0, 0, 64, 64);
       const raw = ctx.getImageData(0,0,64,64).data;
-      await request('avatar', {rgba: btoa(String.fromCharCode(...raw))});
+      return btoa(String.fromCharCode(...raw));
     } finally { bitmap.close(); }
   }
   async function personal(profile) {
@@ -128,15 +129,36 @@ export function mount(host) {
     }));
     else profileBox.append(create('p', me.displayName));
     const photo = section('Avatar');
-    if (me.avatar) photo.append(avatarCanvas(me.avatar));
+    const preview = create('div');
+    if (me.avatar) preview.append(avatarCanvas(me.avatar));
     const file = input('file');
     file.accept = 'image/png,image/jpeg,image/webp';
-    photo.append(field('Profile image', file), action('Save avatar', async () => {
-      await upload(file.files[0]); if (page===current) await personal(); message('Avatar saved.');
-    }));
-    if (me.avatar) photo.append(action('Remove avatar', async () => {
-      await request('avatar', {rgba:null}); if (page===current) await personal(); message('Avatar removed.');
-    }));
+
+    async function updateAvatar(chosenFile, otherButton) {
+      otherButton.setAttribute('aria-disabled', 'true');
+      try {
+        const rgba = chosenFile === null ? null : await encodeAvatar(chosenFile);
+        if (page !== current) return;
+        await request('avatar', {rgba});
+        if (page !== current) return;
+        if (rgba) {
+          preview.replaceChildren(avatarCanvas(rgba));
+          if (file.files[0] === chosenFile) file.value = '';
+        } else {
+          if (root.activeElement === removeAvatar) file.focus();
+          preview.replaceChildren();
+        }
+        removeAvatar.hidden = !rgba;
+        message(rgba ? 'Avatar saved.' : 'Avatar removed.');
+      } finally {
+        otherButton.removeAttribute('aria-disabled');
+      }
+    }
+
+    const saveAvatar = action('Save avatar', () => updateAvatar(file.files[0], removeAvatar));
+    const removeAvatar = action('Remove avatar', () => updateAvatar(null, saveAvatar));
+    removeAvatar.hidden = !me.avatar;
+    photo.append(preview, field('Profile image', file), saveAvatar, removeAvatar);
     const passwords = section('Password');
     const old = input('password','current-password');
     const next = input('password','new-password');
