@@ -158,6 +158,8 @@ export function mount(host) {
     search.addEventListener('keydown',e=>{if(e.key==='Enter') submit.click();});
     body.append(field('Find by username',search),submit,results,detail);
     function render(user,key) {
+      const focused = root.activeElement;
+      const focusControl = detail.contains(focused) ? focused.dataset.accountControl : null;
       detail.replaceChildren(create('h3',user.username));
       const can = p=>me.permissions.includes(p);
       const target=user.subject;
@@ -166,6 +168,9 @@ export function mount(host) {
         const check=input('checkbox');
         check.checked=value;
         check.disabled=!can(permission);
+        check.dataset.accountControl=fields.setting ?? op;
+        let saving=false;
+        check.addEventListener('click', event => { if (saving) event.preventDefault(); });
         check.addEventListener('change',async () => {
           const enabled=check.checked;
           if (op==='retention' && !enabled && !window.confirm('The next scheduled reset deletes this account, its Files and its mailbox. Its address can then be used again. Continue?')) {
@@ -174,7 +179,9 @@ export function mount(host) {
           if (op==='suspend' && enabled && !window.confirm('Suspend sign-in and revoke this account’s sessions?')) {
             check.checked=false;return;
           }
-          check.disabled=true;
+          // Keep the checkbox focusable while the server processes the change.
+          saving=true;
+          check.setAttribute('aria-disabled','true');
           try {
             const result = await request(op, {target, enabled, ...fields});
             updated(result);
@@ -182,7 +189,11 @@ export function mount(host) {
             else if (result.mailState === 'applied') message('Mail server settings verified.');
             else message('Mail setting saved. Waiting for the mail server to confirm it.');
           }
-          catch(e){check.checked=value;check.disabled=!can(permission);message(e.message);}
+          catch(e){check.checked=value;message(e.message);}
+          finally {
+            saving=false;
+            check.removeAttribute('aria-disabled');
+          }
         });
         const label=create('label');
         label.className='toggle';
@@ -190,14 +201,18 @@ export function mount(host) {
       }
       toggle('Suspend sign-in',user.suspended,'users.suspend','suspend');
       toggle('Keep across resets',user.retained,'retention.manage','retention');
-      if (can('users.reset')) detail.append(action('Issue password reset code',async () => {
-        const result=await request('issue-reset',{target});
-        if (selection!==key || page!==current) return;
-        const output=create('output',result.code);
-        const link=create('a','Password reset page');
-        link.href='/api/accounts/reset';link.target='_blank';link.rel='noopener noreferrer';
-        detail.append(create('p','Share this one-time code privately. It expires in 15 minutes.'),output, link);
-      }));
+      if (can('users.reset')) {
+        const reset = action('Issue password reset code',async () => {
+          const result=await request('issue-reset',{target});
+          if (selection!==key || page!==current) return;
+          const output=create('output',result.code);
+          const link=create('a','Password reset page');
+          link.href='/api/accounts/reset';link.target='_blank';link.rel='noopener noreferrer';
+          detail.append(create('p','Share this one-time code privately. It expires in 15 minutes.'),output, link);
+        });
+        reset.dataset.accountControl='reset-code';
+        detail.append(reset);
+      }
       const mailStatus = {
         applied: 'Verified on the mail server.',
         pending: 'Updating the mail server. The last confirmed settings are shown below.',
@@ -210,6 +225,9 @@ export function mount(host) {
           ? title + (user.effectiveMail.includes(setting) ? ' (server on)' : ' (server off)')
           : title;
         toggle(effective,user.requestedMail.includes(setting),'mail.manage','mail',{setting});
+      }
+      if (focusControl) {
+        detail.querySelector(`[data-account-control="${focusControl}"]`)?.focus({preventScroll:true});
       }
     }
   }
