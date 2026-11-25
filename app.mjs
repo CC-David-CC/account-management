@@ -23,7 +23,10 @@ export function mount(host) {
   const body = create('main');
   const status = create('p');
   status.setAttribute('role', 'status');
-  root.append(style, nav, body, status);
+  const surface = create('div');
+  surface.className = 'account-surface';
+  surface.append(nav, body, status);
+  root.append(style, surface);
   const subject = host.storage?.signedInSubject?.();
   let closed = false;
   let page = 0;

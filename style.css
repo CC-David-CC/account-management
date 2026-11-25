@@ -1,14 +1,29 @@
-:host {display:block; height:100%; overflow:auto; background:#f6f8fa; color:#1b2530; font:15px/1.45 system-ui,sans-serif}
+:host {display:block; height:100%; overflow:auto; font:15px/1.45 system-ui,sans-serif}
+.account-surface {
+  --surface: light-dark(#f6f8fa, #222930);
+  --navigation: light-dark(#e5ebf0, #2c3540);
+  --card: light-dark(#fff, #28313a);
+  --text: light-dark(#1b2530, #f0f4f8);
+  --border: light-dark(#64717e, #8896a4);
+  --accent: light-dark(#145b9b, #9bcbff);
+  min-height:100%;
+  background:var(--surface);
+  color:var(--text);
+}
 * {box-sizing:border-box}
-nav {display:flex; gap:.5rem; padding:.75rem 1rem; background:#e5ebf0; border-bottom:1px solid #bdc8d1}
+nav {display:flex; gap:.5rem; padding:.75rem 1rem; background:var(--navigation); border-bottom:1px solid var(--border)}
 main,[role=status] {max-width:48rem; margin:auto; padding:.75rem 1rem}
 [role=status]:empty {padding:0}
-section {background:white; border:1px solid #ccd5dc; border-radius:.4rem; padding:1rem; margin:.7rem 0}
+section {background:var(--card); border:1px solid var(--border); border-radius:.4rem; padding:1rem; margin:.7rem 0}
 section:empty {display:none}
 h2,h3 {margin:0 0 .65rem; font-size:1.2rem} h2 {font-size:1.5rem}
 label {display:block; margin:.6rem 0}
 label:not(.toggle) input {display:block; margin-top:.2rem; max-width:100%}
 input,button {font:inherit;padding:.35rem .6rem} button {cursor:pointer; margin-right:.35rem}
+button,input:not([type=checkbox]) {background:var(--card); color:var(--text); border:1px solid var(--border); border-radius:.25rem}
+button:disabled {opacity:.65; cursor:default}
+a {color:var(--accent)}
+:focus-visible {outline:2px solid var(--accent); outline-offset:2px}
 .toggle {display:flex; align-items:center; gap:.5rem}
 ul {display:flex; gap:.3rem; flex-wrap:wrap; list-style:none; padding:0}
 canvas,output,a {display:block} output {font-family:monospace; overflow-wrap:anywhere; user-select:all}
