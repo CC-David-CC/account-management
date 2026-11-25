@@ -172,7 +172,13 @@ export function mount(host) {
             check.checked=false;return;
           }
           check.disabled=true;
-          try {updated(await request(op,{target,enabled,...fields}));message(op==='mail'?'Mail request saved for the mail operator.':'Setting saved.');}
+          try {
+            const result = await request(op, {target, enabled, ...fields});
+            updated(result);
+            if (op !== 'mail') message('Setting saved.');
+            else if (result.mailState === 'applied') message('Mail server settings verified.');
+            else message('Mail setting saved. Waiting for the mail server to confirm it.');
+          }
           catch(e){check.checked=value;check.disabled=!can(permission);message(e.message);}
         });
         const label=create('label');
@@ -189,9 +195,19 @@ export function mount(host) {
         link.href='/api/accounts/reset';link.target='_blank';link.rel='noopener noreferrer';
         detail.append(create('p','Share this one-time code privately. It expires in 15 minutes.'),output, link);
       }));
-      detail.append(create('h3','Requested mail settings'),create('p','The mail operator applies these requests. Delivery and sending follow the settings installed on the mail server.'));
-      for (const [setting,title] of Object.entries(mailSettings))
-        toggle(title,user.requestedMail.includes(setting),'mail.manage','mail',{setting});
+      const mailStatus = {
+        applied: 'Verified on the mail server.',
+        pending: 'Updating the mail server. The last confirmed settings are shown below.',
+        unprovisioned: 'This account is waiting for a mailbox.',
+      };
+      detail.append(create('h3','Mail settings'),
+        create('p', mailStatus[user.mailState] || 'The mail operator applies these requests.'));
+      for (const [setting,title] of Object.entries(mailSettings)) {
+        const effective = Array.isArray(user.effectiveMail)
+          ? title + (user.effectiveMail.includes(setting) ? ' (server on)' : ' (server off)')
+          : title;
+        toggle(effective,user.requestedMail.includes(setting),'mail.manage','mail',{setting});
+      }
     }
   }
   if (subject) personal().catch(e=>message(e.message));
