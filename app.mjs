@@ -40,6 +40,24 @@ export function mount(host) {
     return result;
   }
   function message(text) { if (!closed) status.textContent = text; }
+  async function reportError(error, current) {
+    if (page !== current || !valid()) return;
+    const text = error.message || 'The request failed.';
+    if (error.status === 403 && text === 'Permission denied') {
+      try {
+        const profile = await request('self');
+        if (page !== current) return;
+        await personal(profile);
+        if (page !== current + 1 || !valid()) return;
+        nav.querySelector('button')?.focus();
+        message('Your account permissions changed. Your controls were refreshed.');
+        return;
+      } catch {
+        if (page !== current || !valid()) return;
+      }
+    }
+    message(text);
+  }
   function action(label, callback) {
     const button = create('button', label);
     button.type = 'button';
@@ -48,7 +66,7 @@ export function mount(host) {
       button.disabled = true;
       message('');
       try { await callback(); }
-      catch (e) { if (page === current) message(e.message || 'The request failed.'); }
+      catch (error) { await reportError(error, current); }
       finally { button.disabled = false; }
     });
     return button;
@@ -93,9 +111,9 @@ export function mount(host) {
       await request('avatar', {rgba: btoa(String.fromCharCode(...raw))});
     } finally { bitmap.close(); }
   }
-  async function personal() {
+  async function personal(profile) {
     const current = ++page;
-    const profile = await request('self');
+    profile ??= await request('self');
     if (current !== page) return;
     me = profile;
     nav.replaceChildren(action('My account', personal));
@@ -189,7 +207,10 @@ export function mount(host) {
             else if (result.mailState === 'applied') message('Mail server settings verified.');
             else message('Mail setting saved. Waiting for the mail server to confirm it.');
           }
-          catch(e){check.checked=value;message(e.message);}
+          catch (error) {
+            check.checked = value;
+            if (selection === key) await reportError(error, current);
+          }
           finally {
             saving=false;
             check.removeAttribute('aria-disabled');
