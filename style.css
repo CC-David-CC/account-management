@@ -1,14 +1,24 @@
 :host {display:block; height:100%; overflow:auto; font:15px/1.45 system-ui,sans-serif}
 .account-surface {
-  --surface: light-dark(#f6f8fa, #222930);
-  --navigation: light-dark(#e5ebf0, #2c3540);
-  --card: light-dark(#fff, #28313a);
-  --text: light-dark(#1b2530, #f0f4f8);
-  --border: light-dark(#64717e, #8896a4);
-  --accent: light-dark(#145b9b, #9bcbff);
+  --surface: #222930;
+  --navigation: #2c3540;
+  --card: #28313a;
+  --text: #f0f4f8;
+  --border: #8896a4;
+  --accent: #9bcbff;
   min-height:100%;
   background:var(--surface);
   color:var(--text);
+}
+@supports (color: light-dark(black, white)) {
+  .account-surface {
+    --surface: light-dark(#f6f8fa, #222930);
+    --navigation: light-dark(#e5ebf0, #2c3540);
+    --card: light-dark(#fff, #28313a);
+    --text: light-dark(#1b2530, #f0f4f8);
+    --border: light-dark(#64717e, #8896a4);
+    --accent: light-dark(#145b9b, #9bcbff);
+  }
 }
 * {box-sizing:border-box}
 nav {display:flex; gap:.5rem; padding:.75rem 1rem; background:var(--navigation); border-bottom:1px solid var(--border)}
