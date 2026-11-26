@@ -187,6 +187,11 @@ export function mount(host) {
       const time = value => new Date(value * 1000).toLocaleString();
       const paidThrough = accountTiming.retained ? 'Kept across resets' : time(accountTiming.paidThrough);
       const dates = [create('p', 'Paid through: ' + paidThrough)];
+      if (accountTiming.estimatedPaidThrough !== undefined) {
+        const value = accountTiming.estimatedPaidThrough;
+        dates.push(create('p', 'Estimated paid through: ' + (value === null ? 'Beyond year 9999' : time(value))
+          + '. Assumes no new paid API usage.'));
+      }
       if (accountTiming.nextCleanup !== null) dates.push(create('p', 'Next cleanup: ' + time(accountTiming.nextCleanup)));
       box.firstElementChild.after(...dates);
     } catch {
