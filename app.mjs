@@ -121,7 +121,7 @@ export function mount(host) {
     if (me.permissions.includes('users.read')) nav.append(action('Manage users', manage));
     body.replaceChildren(create('h2', 'My account'), create('p', me.username));
     if (host.openLedger) {
-      const credits = section('WebOS credits');
+      const credits = section('CodiCoin');
       credits.append(action('Open Ledger', host.openLedger));
       void loadCreditTiming(credits, current);
     }
