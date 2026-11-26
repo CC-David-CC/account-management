@@ -187,6 +187,8 @@ export function mount(host) {
       const time = value => new Date(value * 1000).toLocaleString();
       const paidThrough = accountTiming.retained ? 'Kept across resets' : time(accountTiming.paidThrough);
       const dates = [create('p', 'Paid through: ' + paidThrough)];
+      if (accountTiming.scheduleState === 'paused') dates.push(create('p', 'Scheduled renewals and cleanup are paused.'));
+      if (accountTiming.scheduleState === 'unavailable') dates.push(create('p', 'The renewal and cleanup schedule is unavailable.'));
       if (accountTiming.estimatedPaidThrough !== undefined) {
         const value = accountTiming.estimatedPaidThrough;
         dates.push(create('p', 'Estimated paid through: ' + (value === null ? 'Beyond year 9999' : time(value))
