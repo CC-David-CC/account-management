@@ -120,6 +120,11 @@ export function mount(host) {
     nav.replaceChildren(action('My account', personal));
     if (me.permissions.includes('users.read')) nav.append(action('Manage users', manage));
     body.replaceChildren(create('h2', 'My account'), create('p', me.username));
+    if (host.openLedger) {
+      const credits = section('WebOS credits');
+      credits.append(action('Open Ledger', host.openLedger));
+      void loadCreditTiming(credits, current);
+    }
     const profileBox = section('Profile');
     const name = input('text','nickname');
     name.value = me.displayName;
@@ -169,6 +174,21 @@ export function mount(host) {
         await request('password',{current:old.value,password:next.value});
         body.replaceChildren(); nav.replaceChildren(); message('Password changed. Sign in again.');
       }));
+  }
+  async function loadCreditTiming(box, current) {
+    try {
+      const context = await host.storage.accountFileContext();
+      if (!valid() || !context.valid() || page !== current) return;
+      const {accountTiming} = await context.files.request('statement', {resource: 'ledger', limit: 1});
+      if (!valid() || !context.valid() || page !== current || !accountTiming) return;
+      const time = value => new Date(value * 1000).toLocaleString();
+      const paidThrough = accountTiming.retained ? 'Kept across resets' : time(accountTiming.paidThrough);
+      const dates = [create('p', 'Paid through: ' + paidThrough)];
+      if (accountTiming.nextCleanup !== null) dates.push(create('p', 'Next cleanup: ' + time(accountTiming.nextCleanup)));
+      box.firstElementChild.after(...dates);
+    } catch {
+      if (valid() && page === current) box.append(create('p', 'Credit timing is unavailable.'));
+    }
   }
   function manage() {
     const current = ++page;
